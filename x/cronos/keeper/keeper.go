@@ -5,24 +5,23 @@ import (
 	"math/big"
 	"strings"
 
-	"cosmossdk.io/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"cosmossdk.io/log"
-
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibccallbacktypes "github.com/cosmos/ibc-go/v10/modules/apps/callbacks/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	cronosprecompiles "github.com/crypto-org-chain/cronos/v2/x/cronos/keeper/precompiles"
 	"github.com/crypto-org-chain/cronos/v2/x/cronos/types"
 	"github.com/ethereum/go-ethereum/common"
-	// this line is used by starport scaffolding # ibc/keeper/import
+
+	"cosmossdk.io/errors"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type (
@@ -47,6 +46,8 @@ type (
 		// this line is used by starport scaffolding # ibc/keeper/attribute
 	}
 )
+
+var _ ibccallbacktypes.ContractKeeper = Keeper{}
 
 func NewKeeper(
 	cdc codec.Codec,
@@ -311,17 +312,10 @@ func (k Keeper) IBCOnAcknowledgementPacketCallback(
 	relayer sdk.AccAddress,
 	contractAddress,
 	packetSenderAddress string,
+	version string,
 ) error {
-	// the ack is wrapped by fee middleware
-	var ack ibcfeetypes.IncentivizedAcknowledgement
-	if err := k.cdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return err
-	}
-	if !ack.Success() {
-		return k.onPacketResult(ctx, packet, false, relayer, contractAddress, packetSenderAddress)
-	}
 	var res channeltypes.Acknowledgement
-	if err := k.cdc.UnmarshalJSON(ack.AppAcknowledgement, &res); err != nil {
+	if err := k.cdc.UnmarshalJSON(acknowledgement, &res); err != nil {
 		return err
 	}
 	return k.onPacketResult(ctx, packet, res.Success(), relayer, contractAddress, packetSenderAddress)
@@ -333,6 +327,7 @@ func (k Keeper) IBCOnTimeoutPacketCallback(
 	relayer sdk.AccAddress,
 	contractAddress,
 	packetSenderAddress string,
+	version string,
 ) error {
 	return k.onPacketResult(ctx, packet, false, relayer, contractAddress, packetSenderAddress)
 }
@@ -342,6 +337,7 @@ func (k Keeper) IBCReceivePacketCallback(
 	packet ibcexported.PacketI,
 	ack ibcexported.Acknowledgement,
 	contractAddress string,
+	version string,
 ) error {
 	return nil
 }
@@ -355,6 +351,7 @@ func (k Keeper) IBCSendPacketCallback(
 	packetData []byte,
 	contractAddress,
 	packetSenderAddress string,
+	version string,
 ) error {
 	return nil
 }

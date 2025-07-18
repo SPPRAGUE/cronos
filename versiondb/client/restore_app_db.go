@@ -11,18 +11,16 @@ import (
 	"runtime"
 	"strings"
 
-	"cosmossdk.io/errors"
 	"github.com/alitto/pond"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/cosmos/iavl/keyformat"
+	"github.com/crypto-org-chain/cronos/memiavl"
+	"github.com/crypto-org-chain/cronos/versiondb/extsort"
 	"github.com/linxGnu/grocksdb"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-
-	"github.com/crypto-org-chain/cronos/memiavl"
-	"github.com/crypto-org-chain/cronos/versiondb/extsort"
 )
 
 const (
@@ -33,7 +31,7 @@ const (
 	latestVersionKey = "s/latest"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 
-	// We creates the temporary sst files in the target database to make sure the file renaming is cheap in ingestion
+	// StoreSSTFileName We creates the temporary sst files in the target database to make sure the file renaming is cheap in ingestion
 	// part.
 	StoreSSTFileName = "tmp-%s-%d.sst"
 
@@ -65,10 +63,6 @@ func RestoreAppDBCmd(opts Options) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			sdk64Compact, err := cmd.Flags().GetBool(flagSDK64Compact)
-			if err != nil {
-				return err
-			}
 			stores, err := GetStoresOrDefault(cmd, opts.DefaultStores)
 			if err != nil {
 				return err
@@ -83,10 +77,6 @@ func RestoreAppDBCmd(opts Options) *cobra.Command {
 			// load the snapshots and compute commit info first
 			var lastestVersion int64
 			var storeInfos []storetypes.StoreInfo
-			if sdk64Compact {
-				// https://github.com/cosmos/cosmos-sdk/issues/14916
-				storeInfos = append(storeInfos, storetypes.StoreInfo{Name: capabilitytypes.MemStoreKey, CommitId: storetypes.CommitID{}})
-			}
 			snapshots := make([]*memiavl.Snapshot, len(stores))
 			for i, store := range stores {
 				path := filepath.Join(snapshotDir, store)
@@ -115,7 +105,6 @@ func RestoreAppDBCmd(opts Options) *cobra.Command {
 
 			group, _ := pool.GroupContext(context.Background())
 			for i := 0; i < len(stores); i++ {
-				// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
 				store := stores[i]
 				snapshot := snapshots[i]
 				group.Submit(func() error {

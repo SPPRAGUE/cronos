@@ -7,16 +7,16 @@ import (
 	"os"
 	"path/filepath"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/crypto-org-chain/cronos/versiondb"
 	"github.com/crypto-org-chain/cronos/versiondb/tsrocksdb"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func (app *App) setupVersionDB(
 	homePath string,
 	keys map[string]*storetypes.KVStoreKey,
 	tkeys map[string]*storetypes.TransientStoreKey,
-	memKeys map[string]*storetypes.MemoryStoreKey,
 	okeys map[string]*storetypes.ObjectStoreKey,
 ) (storetypes.RootMultiStore, error) {
 	dataDir := filepath.Join(homePath, "data", "versiondb")
@@ -49,9 +49,6 @@ func (app *App) setupVersionDB(
 
 	delegatedStoreKeys := make(map[storetypes.StoreKey]struct{})
 	for _, k := range tkeys {
-		delegatedStoreKeys[k] = struct{}{}
-	}
-	for _, k := range memKeys {
 		delegatedStoreKeys[k] = struct{}{}
 	}
 	for _, k := range okeys {
