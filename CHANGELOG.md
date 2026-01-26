@@ -20,6 +20,8 @@
 * [#1946](https://github.com/crypto-org-chain/cronos/pull/1946) Fix: allow preinstall in case account has a balance
 * [#1947](https://github.com/crypto-org-chain/cronos/pull/1947) Fix: estimate gas not accurate
 * [#1929](https://github.com/crypto-org-chain/ethermint/pull/1929) fix: add check on evm transaction tip
+* [#1959](https://github.com/crypto-org-chain/cronos/pull/1959) refactor: replace MsgEthereumTxResponse with EthCallResponse in EVM calls 
+* [#1959](https://github.com/crypto-org-chain/cronos/pull/1959) fix: eip712 legacy signature verify 
 * [#1963](https://github.com/crypto-org-chain/cronos/pull/1963) fix: apply tachyon patch
 
 *Dec 4, 2025*
